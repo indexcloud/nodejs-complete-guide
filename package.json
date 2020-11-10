@@ -1,0 +1,24 @@
+{
+	"name": "nodejs-complete-guide",
+	"version": "1.0.0",
+	"description": "Complete Node.js Guide",
+	"main": "app.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "nodemon app.js",
+		"start-server": "node app.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/indexcloud/nodejs-complete-guide.git"
+	},
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/indexcloud/nodejs-complete-guide/issues"
+	},
+	"homepage": "https://github.com/indexcloud/nodejs-complete-guide#readme",
+	"devDependencies": {
+		"nodemon": "^2.0.6"
+	}
+}
