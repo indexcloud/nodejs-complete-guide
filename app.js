@@ -1,7 +1,6 @@
 const path = require("path");
 
 const express = require("express");
-const bodyParser = require("body-parser");
 
 const errorController = require("./controllers/error");
 
@@ -13,7 +12,10 @@ app.set("views", "views");
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.json());
+// request body has been parsed
+app.use(express.urlencoded({extended: false}));
+// request body has been url encoded
 app.use(express.static(path.join(__dirname, "public"))); // link to css
 
 app.use("/admin", adminRoutes);
