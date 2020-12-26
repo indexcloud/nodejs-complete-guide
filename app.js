@@ -1,9 +1,10 @@
+require("dotenv").config();
 const path = require("path");
 
 const express = require("express");
+const mongoose = require("mongoose");
 
 const errorController = require("./controllers/error");
-const mongoConnect = require("./util/database").mongoConnect;
 const User = require("./models/user");
 
 const app = express();
@@ -21,9 +22,9 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, "public"))); // link to css
 
 app.use((req, res, next) => {
-	User.findById("5fcd15e939e6eb577863bcf1")
+	User.findById("5fe6d68bd4103a713d02c62e")
 		.then(user => {
-			req.user = new User(user.name, user.email, user.cart, user._id);
+			req.user = user;
 			next();
 		})
 		.catch(err => console.log(err));
@@ -34,6 +35,23 @@ app.use(shopRoutes);
 
 app.use("*", errorController.get404);
 
-mongoConnect(() => {
-	app.listen(3000);
-});
+mongoose
+	.connect(`mongodb+srv://jas:${process.env.DB_PASS}@cluster0.tpt4t.mongodb.net/shop?retryWrites=true&w=majority`)
+	.then(result => {
+		User.findOne().then(user => {
+			if (!user) {
+				const user = new User({
+					name: "Max",
+					email: "max@test.com",
+					cart: {
+						items: [],
+					},
+				});
+				user.save();
+			}
+		});
+		app.listen(3000);
+	})
+	.catch(err => {
+		console.log(err);
+	});
