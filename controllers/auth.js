@@ -5,6 +5,7 @@ const sgMail = require("@sendgrid/mail");
 const {validationResult} = require("express-validator/check");
 
 const User = require("../models/user");
+const {kMaxLength} = require("buffer");
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -19,6 +20,11 @@ exports.getLogin = (req, res, next) => {
 		path: "/login",
 		pageTitle: "Login",
 		errorMessage: message,
+		oldInput: {
+			email: "",
+			password: "",
+		},
+		validationErrors: [],
 	});
 };
 
@@ -53,14 +59,27 @@ exports.postLogin = (req, res, next) => {
 			path: "/login",
 			pageTitle: "Login",
 			errorMessage: errors.array()[0].msg,
+			oldInput: {
+				email: email,
+				password: password,
+			},
+			validationErrors: errors.array(),
 		});
 	}
 
 	User.findOne({email: email})
 		.then(user => {
 			if (!user) {
-				req.flash("error", "Invalid email or password.");
-				return res.redirect("/login");
+				return res.status(422).render("auth/login", {
+					path: "/login",
+					pageTitle: "Login",
+					errorMessage: "Invalid email or password.",
+					oldInput: {
+						email: email,
+						password: password,
+					},
+					validationErrors: [],
+				});
 			}
 			bcrypt
 				.compare(password, user.password)
@@ -73,8 +92,16 @@ exports.postLogin = (req, res, next) => {
 							res.redirect("/");
 						});
 					}
-					req.flash("error", "Invalid email or password.");
-					res.redirect("/login");
+					return res.status(422).render("auth/login", {
+						path: "/login",
+						pageTitle: "Login",
+						errorMessage: "Invalid email or password.",
+						oldInput: {
+							email: email,
+							password: password,
+						},
+						validationErrors: [],
+					});
 				})
 				.catch(err => {
 					console.log(err);
@@ -123,6 +150,9 @@ exports.postSignup = (req, res, next) => {
 				subject: "Signup succeeded!",
 				html: "<h1>You successfully signed up!</h1>",
 			});
+		})
+		.catch(err => {
+			console.log(err);
 		});
 };
 
@@ -181,7 +211,7 @@ exports.postReset = (req, res, next) => {
 
 exports.getNewPassword = (req, res, next) => {
 	const token = req.params.token;
-	User.findOne({resetToken: token, resetTokenExpiration: {$gt: Date.now()}}) // $gt is MongoDB Comparison Query Operator
+	User.findOne({resetToken: token, resetTokenExpiration: {$gt: Date.now()}}) // $gt is MongoDB Comparison Query Operator. If resetTokenExpiration is great than Date.now(), return user else error
 		.then(user => {
 			let message = req.flash("error");
 			if (message.length > 0) {
